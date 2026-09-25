@@ -1,6 +1,7 @@
 import { CreateArticleInput, UpdateArticleInput } from "@/app/actions/article";
 import { db } from "@/db";
-import { articles, usersSync } from "@/db/schema";
+import { redis } from "@/db/cache";
+import { Article, articles, usersSync } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 const articleMapSchema = {
@@ -12,13 +13,27 @@ const articleMapSchema = {
   createdAt: articles.createdAt,
 };
 
-export async function getArticles(limit?: number) {
-  const query = db
+export type ArticleResponse = Pick<
+  Article,
+  "content" | "createdAt" | "id" | "title" | "authorId"
+> & { author: string };
+
+const ARTICLES_CACHE_KEY = "articles:all";
+
+export async function getArticles(): Promise<ArticleResponse[]> {
+  const cachedResult = await redis.get<ArticleResponse[]>(ARTICLES_CACHE_KEY);
+
+  if (cachedResult) {
+    console.log("Getting articles from Redis cache!");
+    return cachedResult;
+  }
+
+  const data = await db
     .select(articleMapSchema)
     .from(articles)
-    .leftJoin(usersSync, eq(articles.authorId, usersSync.id));
+    .innerJoin(usersSync, eq(articles.authorId, usersSync.id));
 
-  const data = limit === undefined ? await query : await query.limit(limit);
+  redis.set(ARTICLES_CACHE_KEY, data, { ex: 120 });
 
   return data;
 }
@@ -52,7 +67,12 @@ export async function createArticle(
 }
 
 export async function updateArticle(input: UpdateArticleInput) {
-  return await db.update(articles).set(input).where(eq(articles.id, input.id));
+  const result = await db
+    .update(articles)
+    .set(input)
+    .where(eq(articles.id, input.id));
+  redis.del(ARTICLES_CACHE_KEY);
+  return result;
 }
 
 export async function deleteArticle(id: number) {

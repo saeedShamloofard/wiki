@@ -3,6 +3,7 @@
 import { authenticateUser } from "@/lib/data/auth";
 import { ensureUserExists } from "@/db/sync-user";
 import * as articlesDbHelper from "@/lib/data/articles";
+import { redis } from "@/db/cache";
 
 export type CreateArticleInput = {
   title: string;
@@ -96,4 +97,8 @@ export async function deleteArticle(id: number) {
 
     return { success: false, message: "Something went wrong!" };
   }
+}
+
+export async function articleViewCount(id: number) {
+  return await redis.incr(`pageviews:article:${id}`);
 }

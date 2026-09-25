@@ -5,9 +5,9 @@ import {
   ChevronRight,
   Edit,
   Home,
-  Loader2,
   Trash,
   User,
+  Eye,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,8 +17,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Markdown } from "@/components/wiki/article-view/markdown";
 import { formatDate } from "@/lib/utils";
-import { useActionState } from "react";
-import { deleteArticle } from "@/app/actions/article";
+import { useActionState, useEffect, useState } from "react";
+import { articleViewCount, deleteArticle } from "@/app/actions/article";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/ui/toast";
 
@@ -43,6 +43,7 @@ export function WikiArticleViewer({
 }: WikiArticleViewerProps) {
   const router = useRouter();
 
+  const [viewCount, setViewCount] = useState(0);
   const [, deleteAction, isPending] = useActionState(
     async () => {
       const deletePromise = deleteArticle(article.id);
@@ -62,6 +63,14 @@ export function WikiArticleViewer({
       message: "",
     },
   );
+
+  useEffect(() => {
+    async function getViews() {
+      const result = await articleViewCount(article.id);
+      setViewCount(result);
+    }
+    getViews();
+  }, [article.id]);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -99,6 +108,11 @@ export function WikiArticleViewer({
             </div>
             <div className="flex items-center">
               <Badge variant="secondary">Article</Badge>
+              <div className="ml-3 flex items-center text-sm text-muted-foreground">
+                <Eye className="h-4 w-4 mr-1" />
+                <span>{viewCount ? viewCount : "—"}</span>
+                <span className="ml-1">views</span>
+              </div>
             </div>
           </div>
         </div>

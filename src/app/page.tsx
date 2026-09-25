@@ -1,8 +1,6 @@
 import { WikiCard } from "@/components/wiki/card/wiki-card";
 import { getArticles } from "@/lib/data/articles";
 
-const ARTICLES_LIST_LIMIT = 6;
-
 export default async function Home() {
   const articles = await getArticles();
 
