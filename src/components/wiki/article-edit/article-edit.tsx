@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import Link from "next/link";
 import { uploadFile } from "@/app/actions/upload-image";
+import { useRouter } from "next/navigation";
 
 type WikiEditorProps = {
   initialTitle?: string;
@@ -38,9 +39,10 @@ export function WikiEditor({
   initialContent = "",
   articleId,
 }: WikiEditorProps) {
+  const router = useRouter();
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
-  const [files, setFiles] = useState<File[]>([]);
+  const [file, setFile] = useState<File>();
   const [errors, setErrors] = useState<FormErrors>({});
   const [, dispatchUpdate, isPending] = useActionState(handleUpdate, {
     success: false,
@@ -72,10 +74,13 @@ export function WikiEditor({
     });
 
     let fileUploadResult = undefined;
-    if (files[0]) {
-      const result = await uploadFile(files[0]);
+    if (file) {
+      const result = await uploadFile(file);
       if (result.success) {
         fileUploadResult = result.fileUrl;
+      } else {
+        toast.update(toastId, { description: result.message, type: "error" });
+        return result;
       }
     }
 
@@ -93,6 +98,9 @@ export function WikiEditor({
       type: result.success ? "success" : "error",
       timeout: 3000,
     });
+
+    if (result.success) router.push(`/wiki/${articleId}`);
+
     return result;
   }
 
@@ -100,18 +108,18 @@ export function WikiEditor({
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = event.target.files;
     if (selectedFiles) {
-      const newFiles = Array.from(selectedFiles);
-      setFiles((prev) => [...prev, ...newFiles]);
+      // const newFiles = Array.from(selectedFiles);
+      setFile(selectedFiles[0]);
     }
   };
 
-  const removeFile = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
+  const removeFile = () => {
+    setFile(undefined);
   };
 
   return (
     <Dialog>
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">Edit Article</h1>
           <p className="text-muted-foreground mt-2">
@@ -176,7 +184,7 @@ export function WikiEditor({
           </Card>
 
           <UploadFile
-            files={files}
+            file={file}
             onRemove={removeFile}
             onUpload={handleFileUpload}
           />

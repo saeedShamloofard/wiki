@@ -1,6 +1,7 @@
 "use server";
 
 import { authenticateUser } from "@/lib/data/auth";
+import { put } from "@vercel/blob";
 
 export type UploadedFile = {
   url: string;
@@ -20,18 +21,18 @@ export async function uploadFile(file: File): Promise<UploadFileResult> {
 
   // Basic validation constants
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-  const ALLOWED = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+  const ALLOWED = [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "image/svg+xml",
+  ];
 
-  console.log("📤 uploadFile called, received files:", {
-    name: file.name,
-    size: file.size,
-    type: file.type,
-  });
-
-  if (!file) {
+  if (!(file instanceof File) || file.size === 0) {
     return { success: false, message: "No file provided" };
   }
-
+  console.log(file.type);
   if (!ALLOWED.includes(file.type)) {
     return { success: false, message: "Invalid file type" };
   }
@@ -40,13 +41,22 @@ export async function uploadFile(file: File): Promise<UploadFileResult> {
     return { success: false, message: "File too large" };
   }
 
-  // TODO: Insert Cloudinary upload code here.
-  // Example: upload using Cloudinary SDK on the server and return secure_url
+  try {
+    const blob = await put(file.name, file, {
+      access: "public",
+      addRandomSuffix: true,
+    });
 
-  // Return mock file info for now
-  return {
-    success: true,
-    fileUrl: "/placeholder-image.svg",
-    message: "File has been uploaded successfully",
-  };
+    return {
+      success: true,
+      fileUrl: blob.url,
+      message: "File has been uploaded successfully",
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      message: "Image upload failed. Please try again.",
+    };
+  }
 }
