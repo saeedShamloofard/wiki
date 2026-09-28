@@ -8,18 +8,21 @@ type StackUser = {
 };
 
 export async function ensureUserExists(stackUser: StackUser): Promise<void> {
+  const name = stackUser.displayName ?? "";
+  const email = stackUser.primaryEmail ?? "";
+
   await db
     .insert(usersSync)
     .values({
       id: stackUser.id,
-      name: stackUser.displayName,
-      email: stackUser.primaryEmail,
+      name,
+      email,
     })
     .onConflictDoUpdate({
       target: usersSync.id,
       set: {
-        name: stackUser.displayName,
-        email: stackUser.primaryEmail,
+        name,
+        email,
       },
     });
 }

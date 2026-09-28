@@ -23,7 +23,6 @@ export default async function EditArticlePage({
     <WikiEditor
       initialTitle={article.title}
       initialContent={article.content}
-      isEditing={true}
       articleId={id}
     />
   );
