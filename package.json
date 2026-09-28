@@ -21,6 +21,7 @@
     "@uiw/react-md-editor": "^4.1.2",
     "@upstash/redis": "^1.39.0",
     "@vercel/blob": "^2.8.0",
+    "ai": "^7.0.118",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.3.3",
     "dotenv": "^18.0.3",

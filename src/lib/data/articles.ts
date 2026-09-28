@@ -1,3 +1,4 @@
+import summarizeArticle from "@/AI/summarize";
 import { CreateArticleInput, UpdateArticleInput } from "@/app/actions/article";
 import { db } from "@/db";
 import { redis } from "@/db/cache";
@@ -11,11 +12,12 @@ const articleMapSchema = {
   author: usersSync.name,
   authorId: articles.authorId,
   createdAt: articles.createdAt,
+  summary: articles.summary,
 };
 
 export type ArticleResponse = Pick<
   Article,
-  "content" | "createdAt" | "id" | "title" | "authorId"
+  "content" | "createdAt" | "id" | "title" | "authorId" | "summary"
 > & { author: string };
 
 const ARTICLES_CACHE_KEY = "articles:all";
@@ -52,6 +54,8 @@ export async function createArticle(
   input: CreateArticleInput,
   authorId: string,
 ) {
+  const summary = await summarizeArticle(input.title, input.content);
+
   const response = await db
     .insert(articles)
     .values({
@@ -60,6 +64,7 @@ export async function createArticle(
       slug: `${Date.now()}`,
       published: true,
       authorId,
+      summary,
     })
     .returning({ id: articles.id });
 
@@ -67,11 +72,17 @@ export async function createArticle(
 }
 
 export async function updateArticle(input: UpdateArticleInput) {
+  let summary = undefined;
+  if (input.content) {
+    summary = await summarizeArticle(input.title ?? "", input.content);
+  }
+
   const result = await db
     .update(articles)
-    .set(input)
+    .set({ ...input, summary })
     .where(eq(articles.id, input.id));
-  redis.del(ARTICLES_CACHE_KEY);
+
+  await redis.del(ARTICLES_CACHE_KEY);
   return result;
 }
 

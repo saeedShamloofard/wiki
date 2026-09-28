@@ -8,6 +8,13 @@
       "when": 1790245151410,
       "tag": "0000_living_mother_askani",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790599494832,
+      "tag": "0001_fluffy_nick_fury",
+      "breakpoints": true
     }
   ]
 }
