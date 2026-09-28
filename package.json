@@ -9,6 +9,12 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report",
     "db:seed": "tsx src/db/seed.ts",
     "db:sync-users": "hexclave dev --config-file ./hexclave.config.ts -- tsx src/db/sync-all-users.ts",
     "db:generate": "drizzle-kit generate",
@@ -36,6 +42,7 @@
   },
   "devDependencies": {
     "@hexclave/cli": "^1.0.123",
+    "@playwright/test": "1.55.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -45,6 +52,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.11"
   }
 }
